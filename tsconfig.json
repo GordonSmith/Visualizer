@@ -10,7 +10,7 @@
         "noImplicitAny": false,
         "noEmitOnError": false,
         "noUnusedLocals": true,
-        "strictNullChecks": true,
+        "strictNullChecks": false,
         "noImplicitThis": true,
         "importHelpers": true,
         "lib": [

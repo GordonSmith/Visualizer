@@ -1,5 +1,6 @@
 EXPORT Visualizer := MODULE
     IMPORT Std;
+    IMPORT h3Mod;
 
     EXPORT Bundle := MODULE(Std.BundleBase)
         EXPORT Name := 'Visualizer';
@@ -11,10 +12,11 @@ EXPORT Visualizer := MODULE
         EXPORT Version := '2.0.0';
     END;
 
-    EXPORT KeyValueDef := RECORD 
+    EXPORT KeyValueDef := RECORD
         STRING key;
         STRING value 
     END;
+
     SHARED NullKeyValue := DATASET([], KeyValueDef);
 
     EXPORT FiltersDef := RECORD 
@@ -202,7 +204,6 @@ EXPORT Visualizer := MODULE
         EXPORT WordCloud(STRING _id, STRING _dataSource = '', STRING _outputName = '', DATASET(KeyValueDef) _mappings = NullKeyValue, DATASET(FiltersDef) _filteredBy = NullFilters, DATASET(KeyValueDef) _properties = NullKeyValue) := FUNCTION
             RETURN Meta('chart_WordCloud', _id, _dataSource, _outputName, _mappings, _filteredBy, _properties);
         END;
-        
 
         EXPORT __test := FUNCTION
             ds := DATASET([ {'English', 55},
@@ -268,7 +269,6 @@ EXPORT Visualizer := MODULE
             _props2 := DATASET([{'xAxisType', 'linear'}, {'contourBandwidth', 15}], KeyValueDef) + _properties;
             RETURN Meta('chart_Contour', _id, _dataSource, _outputName, , _filteredBy, _props2);
         END;
-
 
         EXPORT __test := FUNCTION
             ds := DATASET([
@@ -607,6 +607,13 @@ EXPORT Visualizer := MODULE
             RETURN PARALLEL(viz_dashboard);
         END;
     END;
+
+    EXPORT h3Mod := h3Mod;
+
+    EXPORT h3(__path__, __layout__, __lat__, __lng__) := FUNCTIONMACRO
+        IMPORT Visualizer AS this;
+        RETURN Visualizer.h3Mod.h3(__path__, __layout__, __lat__, __lng__);
+    ENDMACRO;
 
     EXPORT main := FUNCTION
         RETURN PARALLEL(Any.__test, TwoD.__test, TwoDLinear.__test, MultiD.__test, Relational.__test, Choropleth.__test);

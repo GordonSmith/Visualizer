@@ -6,7 +6,7 @@ import postcss from "rollup-plugin-postcss";
 const pkg = require("./package.json");
 
 function externals(id) {
-    return !!pkg.devDependencies[id];
+    return id.indexOf("@hpcc-js") === 0;
 }
 
 function globals(id) {
@@ -28,11 +28,15 @@ export default {
     },
     plugins: [
         alias({
+            "leaflet": "@hpcc-js/map"
         }),
         nodeResolve({
             preferBuiltins: true
         }),
         commonjs({
+            namedExports: {
+                "h3-js": ["geoToH3", "h3Polyfill", "h3ToGeo", "h3ToGeoBoundary"]
+            }
         }),
         postcss({
             extensions: [".css"]
