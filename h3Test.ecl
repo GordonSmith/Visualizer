@@ -2,9 +2,9 @@ IMPORT h3Mod.sample.def as def;
 IMPORT Visualizer;
 
 myTest := Visualizer.h3(def.cities.path, def.cities.layout, latitude, longitude);
-//myTest.BuildAll;
-#workunit('name', 'cities');
-myTest.Roxie;
+myTest.BuildAll;
+// #workunit('name', 'cities');
+// myTest.Roxie;
 
 //myTest2 := Visualizer.h3(def.Canada.path, def.Canada.layout, LAT, LON); 
 //myTest2.BuildAll;
