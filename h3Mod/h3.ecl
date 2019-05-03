@@ -3,42 +3,32 @@ EXPORT h3(__path__, __layout__, __lat__, __lng__) := FUNCTIONMACRO
     RETURN MODULE
         IMPORT lib_h3;
 
-        SHARED STRING path := __path__;
-        SHARED STRING postfix := '::h3';
-        SHARED STRING indexPath := path + postfix + '::index';
-        SHARED STRING resPath := path + postfix + '::summary';
+        EXPORT STRING path := __path__;
+        EXPORT STRING postfix := '::h3';
+        EXPORT STRING indexPath := path + postfix + '::index';
+        EXPORT STRING resPath := path + postfix + '::summary';
 
-        SHARED Layout := RECORD(__layout__)
+        EXPORT Layout := RECORD(__layout__)
         END;
 
-        SHARED ds := DATASET(path, {layout, UNSIGNED8 RecPos{VIRTUAL(fileposition)}}, THOR);
+        EXPORT ds := DATASET(path, {layout, UNSIGNED8 RecPos{VIRTUAL(fileposition)}}, THOR);
 
-        SHARED IndexParts := RECORD
+        EXPORT IndexParts := RECORD
             DATA1 part;
         END;
 
-        EXPORT STRING16 indexToString(lib_h3.h3_index_t idx) := EMBED(C++ : pure) 
-            const byte MASK0 = 0b01111111;
-            const byte MASK = 0b00000111;
-
-            __result[0] = ((idx >> 45) & MASK0) + 48;
-            for (unsigned int i = 1; i < 16; ++i) {
-                __result[i] = ((idx >> ((15 - i) * 3)) & MASK) + 48;
-            }
-        ENDEMBED;
-
         EXPORT Index15 := INDEX(ds, {
-                i15_h3Index{XPATH('h3Index')} := indexToString(lib_h3.h3.index(__lat__, __lng__, 15))
+                i15_index{XPATH('h3Index')} := lib_h3.h3.toData(lib_h3.h3.index(__lat__, __lng__, 15))
             }, {
                 RecPos
             }, indexPath);
 
-        SHARED RowCountTable(res) := TABLE(Index15, {
-                STRING16 rct_h3Index{XPATH('h3Index')} := i15_h3Index[1..res + 1], 
+        EXPORT RowCountTable(res) := TABLE(Index15, {
+                DATA16 rct_h3Index{XPATH('h3Index')} := i15_index[1..res + 1], 
                 rct_rowCount{XPATH('rowCount')} := COUNT(GROUP)
-            }, i15_h3Index[1..res + 1]);
+            }, i15_index[1..res + 1]);
 
-        SHARED RowCountIndex := INDEX(
+        EXPORT RowCountIndex := INDEX(
                 RowCountTable(0) + 
                 RowCountTable(1) + 
                 RowCountTable(2) + 
@@ -61,9 +51,9 @@ EXPORT h3(__path__, __layout__, __lat__, __lng__) := FUNCTIONMACRO
             }, resPath);
 
         //  Build  ---
-        SHARED BuildIndex15 := BUILDINDEX(Index15, OVERWRITE);
+        EXPORT BuildIndex15 := BUILDINDEX(Index15, OVERWRITE);
 
-        SHARED buildRowCountIndex := FUNCTION 
+        EXPORT buildRowCountIndex := FUNCTION 
             RETURN BUILDINDEX(RowCountIndex, OVERWRITE);
         END;
 
@@ -73,57 +63,57 @@ EXPORT h3(__path__, __layout__, __lat__, __lng__) := FUNCTIONMACRO
         );
 
         //  Roxie Service  ---
-        indexRead(UNSIGNED8 h3Idx) := FUNCTION
+        EXPORT indexRead(UNSIGNED8 h3Idx) := FUNCTION
             res := lib_h3.h3.resolution(h3Idx);
-            gb := RowCountIndex;
-            strIndex := indexToString(h3Idx);
-            RETURN LIMIT(gb(KEYED(rct_h3Index = strIndex[1..res + 1])), 1);
+            strIndex := lib_h3.h3.toData(h3Idx);
+            RETURN LIMIT(RowCountIndex(KEYED(rct_h3Index = (DATA16)strIndex[1..res + 1])), 1);
         END;
 
-        SHARED rowCount(UNSIGNED8 h3Idx) := FUNCTION
+        EXPORT rowCount(UNSIGNED8 h3Idx) := FUNCTION
             found := indexRead(h3Idx);
             RETURN IF(COUNT(found) = 0, 0, found[1].rct_rowCount);
         END;
 
-        SHARED ChildRecord := RECORD
+        EXPORT ChildRecord := RECORD
             REAL8 lat;
             REAL8 lng;
             Layout payload;
         END;
 
-        SHARED fetchRows(UNSIGNED8 h3Idx) := FUNCTION
+        EXPORT fetchRows(UNSIGNED8 h3Idx) := FUNCTION
             res := lib_h3.h3.resolution(h3Idx);
+            strIndex := lib_h3.h3.toData(h3Idx);
             ChildRecord xForm(ds L):= TRANSFORM
                 SELF.lat := L.__lat__;
                 SELF.lng := L.__lng__;
                 SELF.payload := L;
             END;
 
-            fds := Index15(KEYED(i15_h3Index[1..res + 1] = indexToString(h3Idx)[1..res + 1]));
+            fds := Index15(KEYED(i15_index = (DATA16)strIndex[1..res + 1]));
 
-            RETURN CHOOSEN(FETCH(ds, fds, RIGHT.RecPos, xForm(LEFT)), 100);
+            RETURN CHOOSEN(FETCH(ds, fds, RIGHT.RecPos, xForm(LEFT)), 10000);
         END;
 
-        SHARED StrIndexRecord := RECORD
+        EXPORT StrIndexRecord := RECORD
             STRING h3Index;
         END;
-        SHARED EmptyStrIndexDS := DATASET([], StrIndexRecord);
+        EXPORT EmptyStrIndexDS := DATASET([], StrIndexRecord);
 
-        SHARED IndexRecord := RECORD
+        EXPORT IndexRecord := RECORD
             UNSIGNED8 h3Index;
         END;
-        SHARED EmptyIndexDS := DATASET([], IndexRecord);
+        EXPORT EmptyIndexDS := DATASET([], IndexRecord);
 
-        SHARED RowCountRecord := RECORD
-            STRING h3Index;
+        EXPORT RowCountRecord := RECORD
+            STRING16 h3Index;
             UNSIGNED6 rowCount;
             DATASET(ChildRecord) childRows;
         END;
-        SHARED EmptyRowCountDS := DATASET([], RowCountRecord);
+        EXPORT EmptyRowCountDS := DATASET([], RowCountRecord);
 
-        SHARED EmptyPolyDS := DATASET([], lib_h3.h3_point_t);
+        EXPORT EmptyPolyDS := DATASET([], lib_h3.h3_point_t);
 
-        SHARED calcIndexSet(DATASET(StrIndexRecord) indexStrSet) := FUNCTION 
+        EXPORT calcIndexSet(DATASET(StrIndexRecord) indexStrSet) := FUNCTION 
             RowCountRecord xForm(StrIndexRecord L) := TRANSFORM
                 SELF.h3Index := L.h3Index;
                 SELF.rowCount := rowCount(lib_h3.h3.fromString(L.h3Index));
@@ -134,7 +124,7 @@ EXPORT h3(__path__, __layout__, __lat__, __lng__) := FUNCTIONMACRO
             RETURN items(rowCount > 0);
         END;
 
-        SHARED calcPolySet(DATASET(lib_h3.h3_point_t) polySet, INTEGER4 res, UNSIGNED4 childThreshold) := FUNCTION 
+        EXPORT calcPolySet(DATASET(lib_h3.h3_point_t) polySet, INTEGER4 res, UNSIGNED4 childThreshold) := FUNCTION 
             indexSet := DATASET(lib_h3.h3.polyfill(polySet, res), IndexRecord);
 
             RowCountRecord xForm(IndexRecord L) := TRANSFORM
