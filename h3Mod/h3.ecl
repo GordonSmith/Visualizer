@@ -18,15 +18,15 @@ EXPORT h3(__path__, __layout__, __lat__, __lng__) := FUNCTIONMACRO
         END;
 
         EXPORT Index15 := INDEX(ds, {
-                i15_index{XPATH('h3Index')} := lib_h3.h3.toData(lib_h3.h3.index(__lat__, __lng__, 15))
+                i15_index{XPATH('h3Index')} := lib_h3.h3.toECLIndex(lib_h3.h3.index(__lat__, __lng__, 15))
             }, {
                 RecPos
             }, indexPath);
 
         EXPORT RowCountTable(res) := TABLE(Index15, {
-                DATA16 rct_h3Index{XPATH('h3Index')} := i15_index[1..res + 1], 
+                STRING16 rct_h3Index{XPATH('h3Index')} := lib_h3.h3.ECLIndexParent(i15_index, res), 
                 rct_rowCount{XPATH('rowCount')} := COUNT(GROUP)
-            }, i15_index[1..res + 1]);
+            }, lib_h3.h3.ECLIndexParent(i15_index, res));
 
         EXPORT RowCountIndex := INDEX(
                 RowCountTable(0) + 
@@ -65,8 +65,8 @@ EXPORT h3(__path__, __layout__, __lat__, __lng__) := FUNCTIONMACRO
         //  Roxie Service  ---
         EXPORT indexRead(UNSIGNED8 h3Idx) := FUNCTION
             res := lib_h3.h3.resolution(h3Idx);
-            strIndex := lib_h3.h3.toData(h3Idx);
-            RETURN LIMIT(RowCountIndex(KEYED(rct_h3Index = (DATA16)strIndex[1..res + 1])), 1);
+            strIndex := lib_h3.h3.toECLIndex(h3Idx);
+            RETURN LIMIT(RowCountIndex(KEYED(rct_h3Index = strIndex[1..res + 1])), 1);
         END;
 
         EXPORT rowCount(UNSIGNED8 h3Idx) := FUNCTION
@@ -82,14 +82,14 @@ EXPORT h3(__path__, __layout__, __lat__, __lng__) := FUNCTIONMACRO
 
         EXPORT fetchRows(UNSIGNED8 h3Idx) := FUNCTION
             res := lib_h3.h3.resolution(h3Idx);
-            strIndex := lib_h3.h3.toData(h3Idx);
+            strIndex := lib_h3.h3.toECLIndex(h3Idx);
             ChildRecord xForm(ds L):= TRANSFORM
                 SELF.lat := L.__lat__;
                 SELF.lng := L.__lng__;
                 SELF.payload := L;
             END;
 
-            fds := Index15(KEYED(i15_index = (DATA16)strIndex[1..res + 1]));
+            fds := Index15(KEYED(i15_index[1..res + 1] = strIndex[1..res + 1]));
 
             RETURN CHOOSEN(FETCH(ds, fds, RIGHT.RecPos, xForm(LEFT)), 10000);
         END;
@@ -105,7 +105,7 @@ EXPORT h3(__path__, __layout__, __lat__, __lng__) := FUNCTIONMACRO
         EXPORT EmptyIndexDS := DATASET([], IndexRecord);
 
         EXPORT RowCountRecord := RECORD
-            STRING16 h3Index;
+            STRING h3Index;
             UNSIGNED6 rowCount;
             DATASET(ChildRecord) childRows;
         END;

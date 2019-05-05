@@ -4,18 +4,18 @@ IMPORT lib_h3;
 
 myTest := Visualizer.h3(def.cities.path, def.cities.layout, latitude, longitude);
 //myTest.BuildAll;
-#workunit('name', 'cities');
-myTest.Roxie; 
+//#workunit('name', 'cities');
+//myTest.Roxie; 
 
-/*
-h3Idx:=lib_h3.h3.index(0, 0, 0);
+h3Idx := lib_h3.h3.index(30, 0, 0);
+
 res := lib_h3.h3.resolution(h3Idx);
-strIndex := lib_h3.h3.toData(h3Idx);
+strIndex := lib_h3.h3.toECLIndex(h3Idx);
 strIndex[1..res + 1]; 
-myTest.Index15(i15_index[1..res + 1] = (STRING)strIndex[1..res + 1]);
-myTest.Index15(KEYED(i15_index[1..res + 1] = (STRING)strIndex[1..res + 1]));
-myTest.Index15(i15_index[1..2] = '3B');
-myTest.Index15(KEYED(i15_index[1..1] = '3B'));
+myTest.RowCountIndex(KEYED(rct_h3Index = strIndex[1..res + 1]));
+myTest.rowCount(h3Idx);
+myTest.Index15(KEYED(i15_index[1..res + 1] = strIndex[1..res + 1]));
+myTest.Index15(i15_index[1..res + 1] = strIndex[1..res + 1]);
 
 // myTest.rowCount(h3Idx);
 // myTest.fetchRows(h3Idx);
