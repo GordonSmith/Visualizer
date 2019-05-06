@@ -107,6 +107,8 @@ EXPORT h3(__path__, __layout__, __lat__, __lng__) := FUNCTIONMACRO
         EXPORT RowCountRecord := RECORD
             STRING h3Index;
             UNSIGNED6 rowCount;
+            h3_point_t center;
+            DATASET(h3_point_t) boundary;
             DATASET(ChildRecord) childRows;
         END;
         EXPORT EmptyRowCountDS := DATASET([], RowCountRecord);
@@ -117,7 +119,9 @@ EXPORT h3(__path__, __layout__, __lat__, __lng__) := FUNCTIONMACRO
             RowCountRecord xForm(StrIndexRecord L) := TRANSFORM
                 SELF.h3Index := L.h3Index;
                 SELF.rowCount := rowCount(lib_h3.h3.fromString(L.h3Index));
-                SELF.childRows := DATASET([], ChildRecord)
+                SELF.center := lib_h3.h3.center(lib_h3.h3.fromString(L.h3Index))[1];
+                SELF.boundary := lib_h3.h3.boundary(lib_h3.h3.fromString(L.h3Index));
+                SELF.childRows := DATASET([], ChildRecord);
             END;
 
             items := PROJECT(indexStrSet, xForm(LEFT));    
@@ -130,6 +134,8 @@ EXPORT h3(__path__, __layout__, __lat__, __lng__) := FUNCTIONMACRO
             RowCountRecord xForm(IndexRecord L) := TRANSFORM
                 SELF.h3Index := lib_h3.h3.toString(L.h3Index);
                 SELF.rowCount := rowCount(L.h3Index);
+                SELF.center := lib_h3.h3.center(L.h3Index)[1];
+                SELF.boundary := lib_h3.h3.boundary(L.h3Index);
                 SELF.childRows := IF(SELF.rowCount > 0 AND SELF.rowCount < childThreshold, fetchRows(L.h3Index), DATASET([], ChildRecord));
             END;
 

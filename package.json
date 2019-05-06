@@ -42,7 +42,6 @@
     "@hpcc-js/tree": "2.7.7",
     "@hpcc-js/util": "2.6.7",
     "d3-geo": "1.6.4",
-    "h3-js": "3.4.3",
     "leaflet": "1.4.0",
     "leaflet.gridlayer.googlemutant": "GordonSmith/Leaflet.GridLayer.GoogleMutant#master",
     "leaflet.markercluster": "1.4.1",

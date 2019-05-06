@@ -1,6 +1,5 @@
 import { extent as d3Extent, Palette } from "@hpcc-js/common";
 import { Leaflet, leaflet } from "@hpcc-js/map";
-import { geoToH3, h3ToGeoBoundary } from "h3-js";
 
 type Spread = [number, number];
 type Point = [number, number];
@@ -21,10 +20,10 @@ export class Hexagons extends Leaflet.ClusterLayer {
 
     _palette;
 
-    protected fixDateLine(points: Point[]): Point[] {
+    protected fixDateLine(center: Point, points: Point[]): Point[] {
         const [lhsCount, rhsCount] = points.reduce(calcSpread, [0, 0]);
         if (lhsCount && rhsCount) {
-            return points.map(shiftPoint(lhsCount >= rhsCount));
+            return points.map(shiftPoint(center[1] < 0));
         }
         return points;
     }
@@ -46,21 +45,19 @@ export class Hexagons extends Leaflet.ClusterLayer {
         const columns = this.columns();
         const latIdx = columns.indexOf(this.latitudeColumn());
         const lngIdx = columns.indexOf(this.longtitudeColumn());
-        const h3IndexCol = 0;
 
         let resolution = this.h3Resolution();
         if (resolution > 15) {
             resolution = 15;
         }
 
-        const data = this.data().filter(row => !this.omitNullLatLong() || (!!row[latIdx] && !!row[lngIdx])).map(row => [geoToH3(row[latIdx], row[lngIdx], resolution)]);
+        const data = this.data().filter(row => !this.omitNullLatLong() || (!!row[latIdx] && !!row[lngIdx]));
 
         const extent = d3Extent(data, row => 1);
 
         this.clear();
         data.forEach(row => {
-            const points = h3ToGeoBoundary(row[h3IndexCol]);
-            this.add(new leaflet.Polygon(this.fixDateLine(points), {
+            this.add(new leaflet.Polygon(this.fixDateLine(row.center, row.boundary), {
                 color: this._palette(extent[1]),
                 fillColor: this._palette(1, extent[0], extent[1]),
                 fillOpacity: this.opacity(),

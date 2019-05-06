@@ -1,6 +1,5 @@
 import { Query } from "@hpcc-js/comms";
 import { leaflet, Leaflet } from "@hpcc-js/map";
-import { h3ToGeo, h3ToGeoBoundary } from "h3-js";
 import { Hexagons } from "./Hexagons";
 
 type Point = [number, number];
@@ -47,7 +46,7 @@ export function tidyBounds(bounds: leaflet.LatLngBounds) {
     return bounds.pad(0.1);
 }
 
-export type H3ResponseRow = { h3index: string, rowcount: number, childrows?: { Row: any[] } };
+export type H3ResponseRow = { h3index: string, rowcount: number, center: { lat: number, lon: number }, boundary: { Row: Array<{ lat: number, lon: number }> }, childrows?: { Row: any[] } };
 export type H3Response = H3ResponseRow[];
 
 export class H3Service {
@@ -301,8 +300,7 @@ export class HexTest2 extends Hexagons {
                     this.add(marker);
                 });
             } else {
-                const points = h3ToGeoBoundary(row.h3index);
-                const polygon = new leaflet.Polygon(this.fixDateLine(points), {
+                const polygon = new leaflet.Polygon(this.fixDateLine([row.center.lat, row.center.lon], row.boundary.Row.map(p => [p.lat, p.lon])), {
                     color: "gray",
                     fillColor: "lightgray",
                     opacity: this.opacity(),
@@ -310,8 +308,7 @@ export class HexTest2 extends Hexagons {
                     origRow: row
                 } as any).on("click", e => this.clickHandler(e, row));
                 this.add(polygon);
-                const [lat, lon] = h3ToGeo(row.h3index);
-                const circle = new leaflet.Marker([lat, lon], {
+                const circle = new leaflet.Marker([row.center.lat, row.center.lon], {
                     icon: this.createIcon(row.rowcount),
                     origRow: row
                 } as any).on("click", e => this.clickHandler(e, row));
