@@ -24,7 +24,7 @@ EXPORT h3(__path__, __layout__, __lat__, __lng__) := FUNCTIONMACRO
             }, indexPath);
 
         EXPORT RowCountTable(res) := TABLE(Index15, {
-                STRING16 rct_h3Index{XPATH('h3Index')} := lib_h3.h3.ECLIndexParent(i15_index, res), 
+                rct_h3Index{XPATH('h3Index')} := lib_h3.h3.ECLIndexParent(i15_index, res), 
                 rct_rowCount{XPATH('rowCount')} := COUNT(GROUP)
             }, lib_h3.h3.ECLIndexParent(i15_index, res));
 
