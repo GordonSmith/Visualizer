@@ -6,6 +6,23 @@
     <title>HPCC: Visualization</title>
     <link href="./index.css" rel="stylesheet">
     <link rel="stylesheet" href="https://viz.hpccsystems.com/v2.6.4/common/font-awesome/css/font-awesome.min.css">
+    <style>
+        #container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        #container>* {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
     <script src="https://viz.hpccsystems.com/v2.6.7/loader/dist/index.min.js"></script>
     <script>
         var espUrl = window.location.href;
@@ -29,7 +46,17 @@
         var app;
         var require;
         hpccLoader.amd(!isDebugger ? "" : "../node_modules/@hpcc-js", !isDebugger, {
-            "h3-js": "../node_modules/h3-js/dist/h3-js.umd",
+            "d3-array": "../node_modules/d3-array/dist/d3-array",
+            "d3-color": "../node_modules/d3-color/dist/d3-color",
+            "d3-scale": "../node_modules/d3-scale/dist/d3-scale",
+            "d3-interpolate": "../node_modules/d3-interpolate/dist/d3-interpolate",
+            "d3-format": "../node_modules/d3-format/dist/d3-format",
+            "d3-time": "../node_modules/d3-time/dist/d3-time",
+            "d3-time-format": "../node_modules/d3-time-format/dist/d3-time-format",
+            "@deck.gl/core": "../node_modules/@deck.gl/core/dist.min",
+            "@deck.gl/layers": "../node_modules/@deck.gl/layers/dist.min",
+            "mapbox-gl": "../node_modules/mapbox-gl/dist/mapbox-gl",
+            "mapbox-gl.css": "../node_modules/mapbox-gl/dist/mapbox-gl.css",
             "tslib": "../node_modules/tslib/tslib"
         }).then(function (r) {
             require = r;
